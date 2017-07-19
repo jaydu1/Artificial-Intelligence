@@ -44,10 +44,11 @@ def custom_score(game, player):
     center = np.mean(game.get_blank_spaces())
     own_moves = len(game.get_legal_moves(player))
     opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
-    if len(game.get_blank_spaces()) <= game.width*game.height/3:
+    blank = len(game.get_blank_spaces())
+    if  blank >= game.width*game.height/3*2:
         return np.sum((game.get_player_location(player) - center )**2)
-    elif len(game.get_blank_spaces()) <= game.width*game.height/3*2:
-        return float(own_moves) - 2 * float(opp_moves) + np.sum((game.get_player_location(player) - center )**2)/game.width/game.height
+    elif blank >= game.width*game.height/3:
+        return float(own_moves) - 1.5 * float(opp_moves) + np.sum((game.get_player_location(player) - center )**2)/game.width/game.height
     else:
         return float(own_moves)
 
@@ -82,11 +83,10 @@ def custom_score_2(game, player):
 
     center = np.mean(game.get_blank_spaces())
     own_moves = len(game.get_legal_moves(player))
-    opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
-    if len(game.get_blank_spaces()) <= game.width*game.height/2:
+    if len(game.get_blank_spaces()) >= game.width*game.height/2:
         return np.sum((game.get_player_location(player) - center )**2)
     else:
-        return float(own_moves) - 0.8 * float(opp_moves)
+        return float(own_moves) + np.sum((game.get_player_location(player) - center )**2)/game.width/game.height
 
 def custom_score_3(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -119,11 +119,11 @@ def custom_score_3(game, player):
 
     center = np.mean(game.get_blank_spaces())
     own_moves = len(game.get_legal_moves(player))
-    if len(game.get_blank_spaces()) <= game.width*game.height/2:
+    opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
+    if len(game.get_blank_spaces()) >= game.width*game.height/2:
         return np.sum((game.get_player_location(player) - center )**2)
     else:
-        return float(own_moves) + np.sum((game.get_player_location(player) - center )**2)/game.width/game.height
-
+        return float(own_moves) - 1.5 * float(opp_moves)
 
 class IsolationPlayer:
     """Base class for minimax and alphabeta agents -- this class is never
