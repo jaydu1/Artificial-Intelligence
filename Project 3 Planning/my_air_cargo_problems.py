@@ -90,7 +90,7 @@ class AirCargoProblem(Problem):
                         precond_neg = []
                         effect_add = [expr("At({}, {})".format(c, a))]
                         effect_rem = [expr("In({}, {})".format(c, p))]
-                        unload = Action(expr("Load({},{},{})".format(c,p,a)),
+                        unload = Action(expr("Unload({},{},{})".format(c,p,a)),
                                       [precond_pos, precond_neg],
                                       [effect_add, effect_rem])
                         unloads.append(unload)
@@ -244,7 +244,7 @@ def air_cargo_p2() -> AirCargoProblem:
     # TODO implement Problem 2 definition
     cargos = ['C{}'.format(i) for i in range(1,4)]
     planes = ['P{}'.format(i) for i in range(1,4)]
-    airports = ['JFK', 'SFO', 'ATL']
+    airports = [ 'SFO','JFK', 'ATL']
     pos = [expr('At({}, {})'.format(cargos[i],airports[i])) for i in range(3)]+[expr('At({}, {})'.format(planes[i],airports[i])) for i in range(3)]
     neg = [expr('At({}, {})'.format(cargos[i],airports[j])) for i in range(3) for j in range(3) if i!=j
            ]+[expr('At({}, {})'.format(planes[i],airports[j])) for i in range(3) for j in range(3) if i!=j
@@ -261,7 +261,7 @@ def air_cargo_p3() -> AirCargoProblem:
     # TODO implement Problem 3 definition
     cargos = ['C{}'.format(i) for i in range(1,5)]
     planes = ['P{}'.format(i) for i in range(1,3)]
-    airports = ['JFK', 'SFO', 'ATL', 'ORD']
+    airports = [ 'SFO','JFK', 'ATL', 'ORD']
     pos = [expr('At({}, {})'.format(cargos[i],airports[i])) for i in range(4)
            ]+[expr('At({}, {})'.format(planes[i],airports[i])) for i in range(2)]
     neg = [expr('At({}, {})'.format(cargos[i],airports[j])) for i in range(4) for j in range(4) if i!=j
