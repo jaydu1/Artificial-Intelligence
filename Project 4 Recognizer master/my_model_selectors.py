@@ -78,11 +78,11 @@ class SelectorBIC(ModelSelector):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         # TODO implement model selection based on BIC scores
-        BIC = [0 for i in range(self.min_n_components,self.max_n_components+1)]
+        BIC = [np.inf for i in range(self.min_n_components,self.max_n_components+1)]
         for i in range(self.min_n_components,self.max_n_components+1):
             try:
                 model = self.base_model(i)
-                BIC[i-self.min_n_components] = -2*model.score(self.X, self.lengths) + (i*i+2*i*len(self.X[0])-1)*log(len(self.X[0]))
+                BIC[i-self.min_n_components] = -2*model.score(self.X, self.lengths) + (i*i+2*i*len(self.X[0])-1)*log(len(self.X))
 
             except:
                 pass
@@ -108,20 +108,20 @@ class SelectorDIC(ModelSelector):
             try:
                 model = self.base_model(i)
                 DIC[i-self.min_n_components] = model.score(self.X, self.lengths)
+                DIC2 = 0
+                for word in self.words:
+                    if word!=self.this_word:
+                        sequences = self.words[word]
+                        x, lengths = self.hwords[word]
+                        try:
+                            model = GaussianHMM(n_components=i, covariance_type="diag", n_iter=1000,
+                                                random_state=self.random_state, verbose=False).fit(x, lengths)
+                            DIC2 += model.score(x,lengths)
+                        except:
+                            pass
+                DIC[i-self.min_n_components] -= DIC2/(len(self.words)-1)
             except:
                 pass
-            DIC2 = 0
-            for word in self.words:
-                if word!=self.this_word:
-                    sequences = self.words[word]
-                    x, lengths = self.hwords[word]
-                    try:
-                        model = GaussianHMM(n_components=i, covariance_type="diag", n_iter=1000,
-                                            random_state=self.random_state, verbose=False).fit(x, lengths)
-                        DIC2 += model.score(x,lengths)
-                    except:
-                        pass
-            DIC[i-self.min_n_components] -= DIC2/(len(self.words)-1)
         best_model = self.base_model(np.argmax(DIC)+self.min_n_components)
         
         return best_model
@@ -137,26 +137,20 @@ class SelectorCV(ModelSelector):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         # TODO implement model selection using CV
-        logL = [0 for i in range(self.min_n_components,self.max_n_components+1)]
-        if len(self.sequences)>2:
-            split_method = KFold()
-            
-            for cv_train_idx, cv_test_idx in split_method.split(self.sequences):
-                for i in range(self.min_n_components,self.max_n_components+1):
-                    try:
-                        hmm_model = GaussianHMM(n_components=i, covariance_type="diag", n_iter=1000,
-                                                random_state=self.random_state, verbose=False).fit(np.array(self.X)[cv_train_idx], np.array(self.lengths)[cv_train_idx])
-                        logL[i-self.min_n_components] += hmm_model.score(self.X[cv_test_idx], self.lengths[cv_test_idx])
-                    except:
-                        pass
-
-        else:
-            for i in range(self.min_n_components,self.max_n_components+1):
-                try:
+        logL = [- np.inf for i in range(self.min_n_components,self.max_n_components+1)]
+        for i in range(self.min_n_components,self.max_n_components+1):
+            try:
+                split_method = KFold()
+                score = 0
+                for cv_train_idx, cv_test_idx in split_method.split(self.sequences):
+                    self.X, self.lengths = combine_sequences(cv_train_idx, self.sequences)
                     model = self.base_model(i)
-                    logL[i-self.min_n_components] += model.score(self.X, self.lengths)
-                except:
-                    pass
+                    test_x, test_length = combine_sequences(cv_test_idx, self.sequences)
+                    score += model.score(test_x, test_length)
+                logL[i-self.min_n_components] = score
+        
+            except:
+                pass
         best_model = self.base_model(np.argmax(logL)+self.min_n_components)
         return best_model
 
